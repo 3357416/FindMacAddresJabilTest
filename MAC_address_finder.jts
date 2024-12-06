@@ -39,17 +39,26 @@ function AssignMACAddresses()
         $CSV_Object = FileReadOpen($FileName); //Lee el archivo .csv y genera un objeto
 	UpdateStatus("CSV INFO:");
   
-	$ValueToFind = "UNASSIGNED"; //Status que indica que las mac addresses estan disponibes
+	
+	$ValueToFind = $SerialNumber; //Status que indica que las mac addresses estan disponibes
 	$FileContents = FileReadAllText($FileName); //Guarda todo el contenido del archivo en una variable
 	UpdateStatus($FileContents);
     
 
+        UpdateStatus("Validating Serial Number:");
+	$SerialNumber_Found = StringContains($FileContents,$ValueToFind); //Valida que haya MAC addresses dispobibles retorna un booleano
+	UpdateStatus($SerialNumber_Found);
+	
+	if($SerialNumber_Found != true) //Si no se encontraron MAC addresses sin asignar
+	{
+	  $ValueToFind = "UNASSIGNED"; //Status que indica que las mac addresses estan disponibes
+
         UpdateStatus("DUT INFO Status:");
-	$MFG_Found = StringContains($FileContents,$ValueToFind); //Valida que haya MAC addresses dispobibles retorna un booleano
-	UpdateStatus($MFG_Found);
+	$Unassigned_Found = StringContains($FileContents,$ValueToFind); //Valida que haya MAC addresses dispobibles retorna un booleano
+	UpdateStatus($Unassigned_Found);
   
   
-  if($MFG_Found == true) 
+	if($Unassigned_Found == true) 
 	{
 	  
 	  ($LineNum, $Value) = FileSearchTextAndRead($CSV_Object, $ValueToFind); //Busc la linea donde hay MAC addresses disponibles, retorna el numero de linea y el contenido de la misma
@@ -78,12 +87,29 @@ function AssignMACAddresses()
 
 	}
 
-	if($MFG_Found != true) //Si no se encontraron MAC addresses sin asignar
+	if($Unassigned_Found != true) //Si no se encontraron MAC addresses sin asignar
 	{
 		$ErrorMsg = "No MAC addresses available";
 		FileReadClose($CSV_Object);
 		Fail($ErrorMsg); //Falla la prueba // se cierra el archivo
 	}
+	}
+	if($SerialNumber_Found == true) 
+	  {
+		$ErrorMsg = "Serial Number already assigned";
+		FileReadClose($CSV_Object);
+		Fail($ErrorMsg); //Falla la prueba // se cierra el archivo
+	}
+  
+  
+  
+  
+  
+  
+  
+  
+  
+	
 
 	return;
       }
