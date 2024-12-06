@@ -1,0 +1,93 @@
+// *************************Jail Test Script File************************************************
+// Product:				
+// Customer:			
+// Software Name:		
+// Author:              
+// **********************************************************************************************
+// *********************************************************************************************
+
+
+// MAIN TEST ROUTINE
+// 
+// **********************************************************************************************
+
+call AssignMACAddresses();
+
+End;
+
+// 
+// **********************************************************************************************
+
+
+
+
+function AssignMACAddresses()
+{
+    UpdateStatus("[Assigning MAC Addresses to Serial Number]");
+
+    // Ruta del archivo CSV que contiene las direcciones MAC
+    $FileName = "C:\\JabilTest\\scripts\\MAC_Address_finder\\MACs.csv";
+
+    // Capturar el número de serie ingresado por el operador
+    $SerialNumber = OperatorInputPrompt("Enter Serial Number for MAC Assignment");
+
+    // Abrir el archivo CSV
+       
+  
+  
+  
+        $CSV_Object = FileReadOpen($FileName); //Lee el archivo .csv y genera un objeto
+	UpdateStatus("CSV INFO:");
+  
+	$ValueToFind = "UNASSIGNED"; //Status que indica que las mac addresses estan disponibes
+	$FileContents = FileReadAllText($FileName); //Guarda todo el contenido del archivo en una variable
+	UpdateStatus($FileContents);
+    
+
+        UpdateStatus("DUT INFO Status:");
+	$MFG_Found = StringContains($FileContents,$ValueToFind); //Valida que haya MAC addresses dispobibles retorna un booleano
+	UpdateStatus($MFG_Found);
+  
+  
+  if($MFG_Found == true) 
+	{
+	  
+	  ($LineNum, $Value) = FileSearchTextAndRead($CSV_Object, $ValueToFind); //Busc la linea donde hay MAC addresses disponibles, retorna el numero de linea y el contenido de la misma
+	  UpdateStatus($LineNum); 
+	  UpdateStatus($Value); //Contenido de la linea
+    
+	  
+	  //$returnString = StringReplace($FileContents,$findString,$replaceString);
+	  $splitChar = ","; //Busca este caracter para partir la string
+	  $numSplits = 3; //Numero de partidas 
+	  ($MAC_Address1, $MAC_Address2, $Status) = StringSplit($Value, $splitChar, $numSplits); //Parte ela linea por las comas, retornando las mac addresses cada una en su variable y el status de las mac addresses en este caso es UNNASIGNED 
+	
+	  $replaceString = $MAC_Address1 + "," + $MAC_Address2 + "," + $SerialNumber; //Crea una nueva string con las mac addresses que se van a usar y asigna el numero de serie a estas
+	  $returnString = StringReplace($FileContents,$Value,$replaceString); //Genera una nueva string con el contenido sobre escrito de todo el archivo .csv // En contenido del archivo original, busca la string de la linea donde se encontraron MAC addresses sin asignar
+	  //reemplaza la linea sin asignar por la que ya tiene el numero de serie asignado
+	  UpdateStatus($returnString);
+	  
+	  FileReadClose($CSV_Object);
+	
+	  $updatedFile = FileWriteOpen($FileName, "NEW"); 
+
+	  FileWrite($updatedFile, $returnString); //Sobreescribe el arrchivo de la ase de datos de las MAC addresses con la string del contenido actualizado.
+	  FileWriteClose($updatedFile); // cierra el escritor de archivos
+
+	  
+
+	}
+
+	if($MFG_Found != true) //Si no se encontraron MAC addresses sin asignar
+	{
+		$ErrorMsg = "No MAC addresses available";
+		FileReadClose($CSV_Object);
+		Fail($ErrorMsg); //Falla la prueba // se cierra el archivo
+	}
+
+	return;
+      }
+
+      
+
+
