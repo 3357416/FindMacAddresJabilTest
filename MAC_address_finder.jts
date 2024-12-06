@@ -23,13 +23,15 @@ End;
 
 function AssignMACAddresses()
 {
-    UpdateStatus("[Assigning MAC Addresses to Serial Number]");
+  
 
     // Ruta del archivo CSV que contiene las direcciones MAC
     $FileName = "C:\\JabilTest\\scripts\\MAC_Address_finder\\MACs.csv";
 
     // Capturar el número de serie ingresado por el operador
     $SerialNumber = OperatorInputPrompt("Enter Serial Number for MAC Assignment");
+    UpdateStatus("Serial Number:");
+    UpdateStatus( $SerialNumber);
 
     // Abrir el archivo CSV
        
@@ -37,23 +39,26 @@ function AssignMACAddresses()
   
   
         $CSV_Object = FileReadOpen($FileName); //Lee el archivo .csv y genera un objeto
-	UpdateStatus("CSV INFO:");
+  
+	UpdateStatus("File path:");
+        UpdateStatus($FileName);
+  
   
 	
 	$ValueToFind = $SerialNumber; //Status que indica que las mac addresses estan disponibes
 	$FileContents = FileReadAllText($FileName); //Guarda todo el contenido del archivo en una variable
-	UpdateStatus($FileContents);
+	//UpdateStatus($FileContents); // Printea el contenido del archivo .csv
     
 
-        UpdateStatus("Validating Serial Number:");
-	$SerialNumber_Found = StringContains($FileContents,$ValueToFind); //Valida que haya MAC addresses dispobibles retorna un booleano
+        UpdateStatus("Validating if Serial Number already has MAC addresses assigned:");
+	$SerialNumber_Found = StringContains($FileContents,$ValueToFind); //Valida que el serial number no este en uso, retorna un booleano
 	UpdateStatus($SerialNumber_Found);
 	
-	if($SerialNumber_Found != true) //Si no se encontraron MAC addresses sin asignar
+	if($SerialNumber_Found != true) 
 	{
 	  $ValueToFind = "UNASSIGNED"; //Status que indica que las mac addresses estan disponibes
 
-        UpdateStatus("DUT INFO Status:");
+        UpdateStatus("Looking for Unassigned MAC addresses:");
 	$Unassigned_Found = StringContains($FileContents,$ValueToFind); //Valida que haya MAC addresses dispobibles retorna un booleano
 	UpdateStatus($Unassigned_Found);
   
@@ -62,8 +67,9 @@ function AssignMACAddresses()
 	{
 	  
 	  ($LineNum, $Value) = FileSearchTextAndRead($CSV_Object, $ValueToFind); //Busc la linea donde hay MAC addresses disponibles, retorna el numero de linea y el contenido de la misma
-	  UpdateStatus($LineNum); 
-	  UpdateStatus($Value); //Contenido de la linea
+	  //UpdateStatus($LineNum); 
+	  //UpdateStatus($Value); //Contenido de la linea
+	  
     
 	  
 	  //$returnString = StringReplace($FileContents,$findString,$replaceString);
@@ -74,14 +80,20 @@ function AssignMACAddresses()
 	  $replaceString = $MAC_Address1 + "," + $MAC_Address2 + "," + $SerialNumber; //Crea una nueva string con las mac addresses que se van a usar y asigna el numero de serie a estas
 	  $returnString = StringReplace($FileContents,$Value,$replaceString); //Genera una nueva string con el contenido sobre escrito de todo el archivo .csv // En contenido del archivo original, busca la string de la linea donde se encontraron MAC addresses sin asignar
 	  //reemplaza la linea sin asignar por la que ya tiene el numero de serie asignado
-	  UpdateStatus($returnString);
-	  
+	  //UpdateStatus($returnString);
+	  UpdateStatus("Found Unassigned MAC addresses:");
+	  UpdateStatus($MAC_Address1);
+	  UpdateStatus($MAC_Address2);
 	  FileReadClose($CSV_Object);
 	
 	  $updatedFile = FileWriteOpen($FileName, "NEW"); 
 
 	  FileWrite($updatedFile, $returnString); //Sobreescribe el arrchivo de la ase de datos de las MAC addresses con la string del contenido actualizado.
 	  FileWriteClose($updatedFile); // cierra el escritor de archivos
+	  
+	  UpdateStatus("MAC addresses assigned to Serial Number:");
+	  UpdateStatus($SerialNumber);
+	  
 
 	  
 
@@ -96,9 +108,9 @@ function AssignMACAddresses()
 	}
 	if($SerialNumber_Found == true) 
 	  {
-		$ErrorMsg = "Serial Number already assigned";
-		FileReadClose($CSV_Object);
-		Fail($ErrorMsg); //Falla la prueba // se cierra el archivo
+	    $ErrorMsg = "Serial Number already assigned";
+	    FileReadClose($CSV_Object);
+	    Fail($ErrorMsg); //Falla la prueba // se cierra el archivo
 	}
   
   
